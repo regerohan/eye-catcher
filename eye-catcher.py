@@ -24,6 +24,18 @@ ap.add_argument('-p', '--shape-predictor', required=True, help='path to facial l
 ap.add_argument('-v', '--video', type=str, default="", help='path to input video file')
 args = vars(ap.parse_args())
 
+# if a video path was supplied, create a new csv file with the same name as the video else create a csv file with the current date and time
+if args['video']:
+    filename = args['video']
+    filename = filename + '.csv'
+    with open(filename, 'w') as f:
+        f.write('timestamp\n')
+else:
+    filename = time.strftime('%Y%m%d %H%M%S') + '.csv'
+    with open(filename, 'w') as f:
+        f.write('timestamp\n')
+
+
 EYE_AR_THRESH = 0.2
 EYE_AR_CONSEC_FRAMES = 3
 
@@ -44,7 +56,6 @@ if args['video']:
     fileStream = True
 else:
     vs = VideoStream(src=0).start()
-    # vs = VideoStream(usePiCamera=True).start()
     fileStream = False
 
 time.sleep(1.0)
@@ -81,11 +92,15 @@ while True:
         else:
             if COUNTER >= EYE_AR_CONSEC_FRAMES:
                 TOTAL += 1
+                # if not video args is given add Total variable and the timestamp in human readable format to csv file
+                if not args['video']:
+                    with open(filename, 'a') as f:
+                        f.write(time.strftime('%Y-%m-%d %H:%M:%S') +','+ str(TOTAL) +'\n')
 
             COUNTER = 0
 
         cv2.putText(frame, "{}".format(TOTAL), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-#        cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
 
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
